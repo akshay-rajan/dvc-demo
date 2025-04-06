@@ -1,0 +1,9 @@
+fastapi[standard]
+python-multipart 
+opencv-python 
+torch 
+torchvision 
+numpy
+compressai
+fvcore
+lpips
