@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import ModelSelect from "./components/ModelSelect";
 
 const API_URL = "http://localhost:8000";
 
@@ -8,6 +9,7 @@ export default function App() {
   const [frame2, setFrame2] = useState(null);
   const [reconstructed, setReconstructed] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [modelPath, setModelPath] = useState("");
 
   const handleFileChange = (e, setFrame) => {
     setFrame(e.target.files[0]);
@@ -25,7 +27,7 @@ export default function App() {
       formData.append("frame1", frame1);
       formData.append("frame2", frame2);
 
-      const compressResp = await axios.post(`${API_URL}/compress`, formData, {
+      const compressResp = await axios.post(`${API_URL}/compress?model_path=${modelPath}`, formData, {
         responseType: 'blob'
       });
 
@@ -35,7 +37,7 @@ export default function App() {
       decompressForm.append("frame1", frame1);
       decompressForm.append("compressed_blob", new Blob([compressedBlob], { type: 'application/octet-stream' }), 'compressed_blob.pkl');
 
-      const decompressResp = await axios.post("http://localhost:8000/decompress", decompressForm);
+      const decompressResp = await axios.post(`${API_URL}/decompress?model_path=${modelPath}`, decompressForm);
       setReconstructed("data:image/jpeg;base64," + decompressResp.data.reconstructed);
     } catch (err) {
       console.error("Compression/Decompression failed", err);
@@ -50,10 +52,12 @@ export default function App() {
 
       <div className="space-y-4 ">
         
-        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setFrame1)} className="border border-gray-300 rounded p-2 text-gray-600" />
-        <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setFrame2)} className="border border-gray-300 rounded p-2 text-gray-600" />
+        <div className="w-full">
+          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setFrame1)} className="border border-gray-300 rounded p-2 text-gray-600" />
+          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setFrame2)} className="border border-gray-300 rounded p-2 text-gray-600" />
+        </div>
 
-        <p className="text-gray-600">Upload two frames to compress and decompress.</p>
+        <ModelSelect modelPath={modelPath} setModelPath={setModelPath} />        
 
         <button onClick={handleCompressAndDecompress} className="bg-black text-white py-2 px-4 rounded hover:bg-gray-800 w-full">
           {loading ? "Processing..." : "Compress & Decompress"}
