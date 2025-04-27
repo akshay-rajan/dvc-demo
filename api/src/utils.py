@@ -4,6 +4,7 @@ import numpy as np
 from fastapi import UploadFile
 from collections import OrderedDict
 
+
 # Helper to read and preprocess frame
 def preprocess_frame(file: UploadFile, device: torch.device) -> torch.Tensor:
     """
@@ -22,7 +23,6 @@ def preprocess_frame(file: UploadFile, device: torch.device) -> torch.Tensor:
     img_rgb = img_rgb.astype(np.float32) / 255.0
     tensor = torch.from_numpy(img_rgb).permute(2, 0, 1).unsqueeze(0).to(device)
     return tensor
-
 
 # Process the model state dict
 def process_state_dict(state_dict: OrderedDict) -> OrderedDict:
