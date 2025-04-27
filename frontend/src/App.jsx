@@ -1,19 +1,18 @@
 import React, { useState } from "react";
 import axios from "axios";
 import ModelSelect from "./components/ModelSelect";
+import { FrameInput } from "./components/FrameInput";
+import Output from "./components/Output";
 
 const API_URL = "http://localhost:8000";
+const MODEL_PLACEHOLDER = "dvc_1.pth";
 
 export default function App() {
   const [frame1, setFrame1] = useState(null);
   const [frame2, setFrame2] = useState(null);
   const [reconstructed, setReconstructed] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [modelPath, setModelPath] = useState("");
-
-  const handleFileChange = (e, setFrame) => {
-    setFrame(e.target.files[0]);
-  };
+  const [modelPath, setModelPath] = useState(MODEL_PLACEHOLDER);
 
   const handleCompressAndDecompress = async () => {
     if (!frame1 || !frame2) {
@@ -49,27 +48,15 @@ export default function App() {
   return (
     <div className="min-h-screen min-w-screen p-8 bg-gray-100 flex flex-col items-center">
       <h1 className="text-3xl font-bold mb-6 text-black">Deep Video Compression</h1>
-
-      <div className="space-y-4 ">
-        
-        <div className="w-full">
-          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setFrame1)} className="border border-gray-300 rounded p-2 text-gray-600" />
-          <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, setFrame2)} className="border border-gray-300 rounded p-2 text-gray-600" />
-        </div>
-
+      <div className="space-y-4 ">        
+        <FrameInput setFrame1={setFrame1} setFrame2={setFrame2} />
         <ModelSelect modelPath={modelPath} setModelPath={setModelPath} />        
 
-        <button onClick={handleCompressAndDecompress} className="bg-black text-white py-2 px-4 rounded hover:bg-gray-800 w-full">
+        <button onClick={handleCompressAndDecompress} className="bg-black text-white py-2 px-4 rounded hover:bg-gray-800 w-full" disabled={loading ? true : false}>
           {loading ? "Processing..." : "Compress & Decompress"}
         </button>
       </div>
-
-      {reconstructed && (
-        <div className="mt-8 w-full max-w-md">
-          <h2 className="text-xl font-semibold mb-2">Reconstructed Frame</h2>
-          <img src={reconstructed} alt="Reconstructed Frame" className="rounded shadow-md" />
-        </div>
-      )}
+      {reconstructed && <Output reconstructed={reconstructed} />}
     </div>
   );
 }
