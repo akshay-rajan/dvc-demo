@@ -14,6 +14,10 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [modelPath, setModelPath] = useState(MODEL_PLACEHOLDER);
 
+  const [compressionTime, setCompressionTime] = useState(null);
+  const [decompressionTime, setDecompressionTime] = useState(null);
+  const [compressionRatio, setCompressionRatio] = useState(null);
+
   const handleCompressAndDecompress = async () => {
     if (!frame1 || !frame2) {
       alert("Please upload both frames.");
@@ -26,23 +30,45 @@ export default function App() {
       formData.append("frame1", frame1);
       formData.append("frame2", frame2);
 
+      const startCompress = performance.now();
       const compressResp = await axios.post(`${API_URL}/compress?model_path=${modelPath}`, formData, {
         responseType: 'blob'
       });
 
       const compressedBlob = compressResp.data;
+      
+      const endCompress = performance.now();
+      setCompressionTime((endCompress - startCompress).toFixed(2)); // in milliseconds
+
+      // Compression ratio calculation
+      const originalSize = frame1.size + frame2.size; // in bytes
+      const compressedSize = compressedBlob.size; // in bytes
+      const ratio = originalSize / compressedSize;
+      setCompressionRatio(ratio.toFixed(2)); // 2 decimal places
 
       const decompressForm = new FormData();
       decompressForm.append("frame1", frame1);
       decompressForm.append("compressed_blob", new Blob([compressedBlob], { type: 'application/octet-stream' }), 'compressed_blob.pkl');
-
+      
+      const startDecompress = performance.now();
       const decompressResp = await axios.post(`${API_URL}/decompress?model_path=${modelPath}`, decompressForm);
+      const endDecompress = performance.now();
+      setDecompressionTime((endDecompress - startDecompress).toFixed(2));
+
       setReconstructed("data:image/jpeg;base64," + decompressResp.data.reconstructed);
+
     } catch (err) {
       console.error("Compression/Decompression failed", err);
       alert("An error occurred during processing.");
     }
     setLoading(false);
+  };
+
+  let outputProps = {
+    reconstructed: reconstructed,
+    compressionTime: compressionTime,
+    decompressionTime: decompressionTime,
+    compressionRatio: compressionRatio
   };
 
   return (
@@ -56,7 +82,9 @@ export default function App() {
           {loading ? "Processing..." : "Compress & Decompress"}
         </button>
       </div>
-      {reconstructed && <Output reconstructed={reconstructed} />}
+      {reconstructed && 
+        <Output {...outputProps} />
+      }
     </div>
   );
 }

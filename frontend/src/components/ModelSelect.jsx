@@ -11,12 +11,7 @@ export default function ModelSelect({ modelPath, setModelPath }) {
   return  (
     <select 
       value={modelPath} 
-      onChange={
-        (e) => {
-          setModelPath(e.target.value)
-          console.log(modelPath);
-        }
-      } 
+      onChange={(e) => setModelPath(e.target.value)} 
       className="border border-gray-300 rounded p-2 text-gray-600 w-full"
     >
       <option value="" disabled>Select a model</option>
