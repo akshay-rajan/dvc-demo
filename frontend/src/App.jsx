@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = "http://localhost:8000";
+
 export default function App() {
   const [frame1, setFrame1] = useState(null);
   const [frame2, setFrame2] = useState(null);
@@ -23,7 +25,7 @@ export default function App() {
       formData.append("frame1", frame1);
       formData.append("frame2", frame2);
 
-      const compressResp = await axios.post("http://localhost:8000/compress", formData, {
+      const compressResp = await axios.post(`${API_URL}/compress`, formData, {
         responseType: 'blob'
       });
 
@@ -44,7 +46,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen min-w-screen p-8 bg-gray-100 flex flex-col items-center">
-      <h1 className="text-3xl font-bold mb-6 text-black">Neural Compression</h1>
+      <h1 className="text-3xl font-bold mb-6 text-black">Deep Video Compression</h1>
 
       <div className="space-y-4 ">
         
