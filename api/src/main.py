@@ -1,16 +1,16 @@
-# app.py
 import io
+import cv2
 import torch
 import pickle
 import numpy as np
-import cv2
 from fastapi import FastAPI, File, UploadFile
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import base64
+
+from src.utils import preprocess_frame, process_state_dict
 from neuralcompression.models.deep_video_compression import DVC
-from src.utils import preprocess_frame
 
 app = FastAPI()
 
@@ -40,11 +40,12 @@ async def startup_event():
         for model_path in MODEL_PATHS:
             # Load model and move to device
             model = DVC()
-            model.load_state_dict(torch.load(model_path, map_location=device))
+            state_dict = torch.load(model_path, map_location=device)
+            model.load_state_dict(process_state_dict(state_dict))
             model.to(device)
             model.eval()
             model.update(force=True)  # Update entropy models
-            models[model_path] = model
+            models[model_path] = model # Store the model in a dictionary
             print(f"Model {model_path} loaded.")
     except Exception as e:
         print(f"Error loading model: {e}")
@@ -62,9 +63,11 @@ async def compress_frame(
     model_path: str = "dvc_1_.pth"
 ):
     try:
+        # Convert the frames to tensors
         img1 = preprocess_frame(frame1, device)
         img2 = preprocess_frame(frame2, device)
-        
+
+        # Check if the model is loaded        
         model = models.get(model_path)
         if model is None:
             return JSONResponse(
@@ -78,6 +81,7 @@ async def compress_frame(
         blob = pickle.dumps(compressed)
 
         return Response(content=blob, media_type="application/octet-stream")
+    
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
@@ -91,6 +95,7 @@ async def decompress_frame(
     try:
         img1 = preprocess_frame(frame1, device)
         
+        # Check if the model is loaded
         model = models.get(model_path)
         if model is None:
             return JSONResponse(
